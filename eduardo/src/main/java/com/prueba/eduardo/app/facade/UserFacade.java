@@ -55,6 +55,7 @@ public class UserFacade {
 	 * @param instance of { @link User }
 	 * @return
 	 */
+	@Transactional(readOnly = false)
 	public User updateUser(User user) {
 		return repository.save(user);
 	}

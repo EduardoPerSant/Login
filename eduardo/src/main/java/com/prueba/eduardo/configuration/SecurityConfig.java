@@ -7,6 +7,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
 import com.prueba.eduardo.component.JwtFilterComponent;
 
@@ -22,7 +25,7 @@ public class SecurityConfig{
         http.csrf().disable()
             .authorizeRequests()
 	         // Permitir acceso a Swagger sin autenticación
-            .antMatchers("/api/swagger-ui.html", "/api/swagger-resources/**", "/api/v2/api-docs", "/api/webjars/**", "/api/configuration/**","/v1/login", "/v1/user")
+            .antMatchers("/api/swagger-ui.html", "/api/swagger-resources/**", "/api/v2/api-docs", "/api/webjars/**", "/api/configuration/**","/v1/login", "/v1/user/6/documents")
             .permitAll()
             .anyRequest().authenticated()
             .and()
@@ -30,4 +33,15 @@ public class SecurityConfig{
 
         return http.build();
     }
+    @Bean
+    public WebMvcConfigurer corsConfigurer() {
+        return new WebMvcConfigurerAdapter() {
+            @Override
+            public void addCorsMappings(CorsRegistry registry) {
+                registry.addMapping("/**").allowedMethods("GET", "POST", "PUT", "DELETE").allowedOrigins("*")
+                        .allowedHeaders("*");
+            }
+        };
+    }
+    
 }

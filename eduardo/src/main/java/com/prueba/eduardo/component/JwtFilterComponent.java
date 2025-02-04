@@ -14,6 +14,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.prueba.eduardo.app.service.SessionService;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.io.IOException;
 import lombok.RequiredArgsConstructor;
 
@@ -27,18 +28,34 @@ public class JwtFilterComponent extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException, java.io.IOException {
         String token = getTokenFromRequest(request);
-        if (token != null && jwtTokenProvider.validateToken(token)) {
-        	if (!sessionService.isTokenValid(token)) {
+
+        if (token != null) {
+            // Validar el token
+            boolean isTokenValid = jwtTokenProvider.validateToken(token);
+
+            if (isTokenValid) {
+                // Verificar si la sesión está activa
+                if (sessionService.isTokenValid(token)) {
+                    // Extraer el nombre de usuario del token y autenticación
+                    String username = jwtTokenProvider.parseToken(token).getSubject();
+                    UsernamePasswordAuthenticationToken authentication = 
+                        new UsernamePasswordAuthenticationToken(username, null, new ArrayList<>());
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                } else {
+                    // Invalida la sesión si no es válida
+                    sessionService.invalidateSession(token);
+                    throw new ServletException("Token inválido o sesión cerrada");
+                }
+            } else {
+                // Si el token es inválido, inválida la sesión y lanza una excepción
+                sessionService.invalidateSession(token);
                 throw new ServletException("Token inválido o sesión cerrada");
             }
-            String username = jwtTokenProvider.parseToken(token).getSubject();
-            // Puedes usar un servicio de usuario para cargar detalles adicionales si es necesario.
-            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(username, null, new ArrayList<>());
-            SecurityContextHolder.getContext().setAuthentication(authentication);
         }
+
+        // Continuar con el filtro si todo es correcto
         filterChain.doFilter(request, response);
     }
-
     private String getTokenFromRequest(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
         if (bearerToken != null) {

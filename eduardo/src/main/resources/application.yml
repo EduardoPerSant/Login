@@ -6,3 +6,12 @@ spring:
     url: jdbc:postgresql://localhost:5432/postgres
     username: postgres
     password: 9496Kion
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+file:
+  upload-dir: ./uploads

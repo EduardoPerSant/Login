@@ -1,6 +1,7 @@
 package com.prueba.eduardo.app.service;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -10,8 +11,11 @@ import org.springframework.stereotype.Service;
 
 import com.prueba.eduardo.app.domain.entity.User;
 import com.prueba.eduardo.app.facade.UserFacade;
+import com.prueba.eduardo.app.web.model.DocumentModel;
+import com.prueba.eduardo.app.web.model.RequestDocumentModel;
 import com.prueba.eduardo.app.web.model.UserModel;
 
+import io.jsonwebtoken.lang.Collections;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
@@ -26,13 +30,15 @@ import lombok.extern.log4j.Log4j2;
 public class UserService {
 	
 	private final UserFacade userFacade;
+	
+	private final DocumentService documentService;
 
 	/**
 	 * Método para buscar por id usuario
 	 * @param id
 	 * @return
 	 */
-	public UserModel findFyId(Long id) {
+	public UserModel findById(Long id) {
 		User response = new User();
 		try {
 			response = userFacade.findById(id);
@@ -102,4 +108,42 @@ public class UserService {
 			throw new Exception("Error al eliminar el usurio.");
 		}
 	}
+	
+	/**
+	 * find Document by id
+	 * @param id
+	 * @return instance of { {@link DocumentModel }
+	 */
+	public DocumentModel findDocumentById(Long id) {
+		return documentService.getById(id);
+	}
+	
+	/**
+	 * get list of document by user
+	 * @param id
+	 * @return list of { {@link DocumentModel}
+	 */
+	public List<DocumentModel> findDocumentByUser(Long id){
+		log.info("find by user id");
+		UserModel model = this.findById(id);
+		if(Objects.isNull(model)) {
+			return Collections.emptyList();
+		}
+		return documentService.findAllByUser(id);
+	}
+	
+	/**
+	 * save new Document
+	 * @param model
+	 * @return instance of { {@link DocumentModel }
+	 */
+	public DocumentModel saveDocument(RequestDocumentModel request) throws Exception {
+		UserModel model = this.findById(request.getUserId());
+		if(Objects.isNull(model)) {
+			throw new Exception("Usuario no encontrado.");
+		}
+		documentService.storeFiles(request.getFiles(), request.getUserId());
+		return new DocumentModel();
+	}
+	
 }

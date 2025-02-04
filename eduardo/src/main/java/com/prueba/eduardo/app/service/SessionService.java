@@ -9,12 +9,14 @@ import com.prueba.eduardo.app.domain.entity.UserSession;
 import com.prueba.eduardo.app.domain.repository.UserSessionRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 
 /**
  * Service para el manejo de sesion
  * @author Eduardo Pérez
  * @since Feb 03, 2025
  */
+@Log4j2
 @Service
 @RequiredArgsConstructor
 public class SessionService {
@@ -71,6 +73,14 @@ public class SessionService {
      */
     public boolean hasActiveSession(Long userId) {
         Optional<UserSession> sessionOpt = userSessionRepository.findByUserIdAndIsActiveTrue(userId);
-        return sessionOpt.isPresent();
+        if(sessionOpt.isEmpty()) {
+        	return false;
+        }
+        String token = sessionOpt.get().getToken();
+    	if(isTokenValid(token)) {
+    		return true;
+    	}
+    	this.invalidateSession(token);
+        return false;
     }
 }

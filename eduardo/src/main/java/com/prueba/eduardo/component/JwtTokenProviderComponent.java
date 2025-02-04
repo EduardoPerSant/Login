@@ -41,22 +41,15 @@ public class JwtTokenProviderComponent {
 	    		    .getBody();
 	    	return claims;
     	}catch (ExpiredJwtException e) {
-            throw new RuntimeException("El token ha expirado", e);
+            throw new ExpiredJwtException(null, null, "El token ha expirado", e);
         }
     }
 
     
     public boolean validateToken(String token) {
-        try {
-        	Claims claims = parseToken(token);
-            return !claims.getExpiration().before(new Date());
-        } catch (ExpiredJwtException e) {
-        	log.info(e);
-            return false;
-        } catch (JwtException e) {
-        	log.info(e);
-            return false;
-        }
+    	Claims claims = parseToken(token);
+        return !claims.getExpiration().before(new Date());
+
     }
     
     public String getUsernameFromToken(String token) {
